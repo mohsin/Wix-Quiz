@@ -18,6 +18,29 @@ export function fetchQuiz(id) {
       });
 }
 
+export function saveQuiz(quiz, user, resultMatrix) {
+  let toSave = {
+    "userId": user,
+    "quizId": quiz,
+    "resultMatrix": resultMatrix
+  };
+
+  let options = {
+    "suppressAuth": true,
+    "suppressHooks": true
+  };
+
+  return wixData
+      .save("QuizUser", toSave, options)
+      .then((results) => {
+        console.log("Quiz result saved")
+      })
+      .catch((err) => {
+        console.log('failed to save quiz')
+        throw err
+      });
+}
+
 export function getQuiz(id) {
   return wixData.query("Quizzes")
       .eq("id", id)

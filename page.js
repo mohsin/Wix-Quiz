@@ -1,4 +1,3 @@
-// For full API documentation, including code examples, visit https://wix.to/94BuAAs
 import {loadQuiz} from 'public/quiz.js'
 
 $w.onReady(function () {

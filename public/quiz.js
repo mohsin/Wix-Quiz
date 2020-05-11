@@ -1,12 +1,5 @@
 // Filename: public/quiz.js
-//
-// Code written in public files is shared by your site's
-// Backend, page code, and site code environments.
-//
-// Use public files to hold utility functions that can
-// be called from multiple locations in your site's code.
-
-import {getQuiz, fetchQuiz} from 'backend/quiz';
+import {getQuiz, fetchQuiz, saveQuiz} from 'backend/quiz';
 
 export class Quiz {
 
@@ -39,59 +32,76 @@ export class Quiz {
         this.titleField.show();
         this.descField.show();
         this.btnStart.show();
+        this.btnStart.label = "Loading...";
         this.btnStart.onClick(() => {
             throw Error("Quiz not loaded yet!")
         })
         fetchQuiz(this.quiz._id).then((result) => {
             this.questions = result.items;
+            this.btnStart.label = "Start Quiz";
             this.btnStart.onClick(() => {
                 this.btnStart.hide();
                 this.btn1.show();
                 this.btn2.show();
                 this.btn3.show();
                 this.btn4.show();
-                this.iterateQuestion();
+                this.answerMatrix = [];
+                this.iterateQuestion("");
 
                 this.btn1.onClick(() => {
-                    this.iterateQuestion();
+                    this.iterateQuestion(this.btn1.label);
                 })
                 this.btn2.onClick(() => {
-                    this.iterateQuestion();
+                    this.iterateQuestion(this.btn2.label);
                 })
                 this.btn3.onClick(() => {
-                    this.iterateQuestion();
+                    this.iterateQuestion(this.btn3.label);
                 })
                 this.btn4.onClick(() => {
-                    this.iterateQuestion();
+                    this.iterateQuestion(this.btn4.label);
                 })
             })
         });
     }
 
-    iterateQuestion() {
+    iterateQuestion(answer) {
+        // Process answer
+        if(answer.length > 0) {
+            if(this.currentQuestion.answer === answer) {
+                this.answerMatrix.push(true)
+            } else {
+                this.answerMatrix.push(false)
+            }
+        }
+
+        // Bring forward next question
         if(!this.isLastQuestion) {
-            let currentQuestion = this.nextQuestion;
+            this.currentQuestion = this.nextQuestion;
             let options = [
-                currentQuestion.option1,
-                currentQuestion.option2,
-                currentQuestion.option3,
-                currentQuestion.answer
+                this.currentQuestion.option1,
+                this.currentQuestion.option2,
+                this.currentQuestion.option3,
+                this.currentQuestion.answer
             ];
             this.shuffleArray(options);
 
             this.titleField.text = "Question " + this.currentQn;
-            this.descField.text = currentQuestion.question;
+            this.descField.text = this.currentQuestion.question;
             this.btn1.label = options.shift();
             this.btn2.label = options.shift();
             this.btn3.label = options.shift();
             this.btn4.label = options.shift();
         } else {
             this.titleField.text = "End of quiz!";
-            this.descField.text = "Your score has been sent to your teacher";
             this.btn1.hide();
             this.btn2.hide();
             this.btn3.hide();
             this.btn4.hide();
+            saveQuiz(this.quiz, "1", this.answerMatrix)
+            this.descField.text = "Your score of ("
+                    + this.answerMatrix.filter(v => v === true).length
+                    + "/" + this.questions.length
+                    + ") has been sent to your teacher";
         }
     }
 
@@ -105,7 +115,6 @@ export class Quiz {
         return qn;
     }
 
-    // Credit: https://stackoverflow.com/a/12646864/997147
     shuffleArray(array) {
         for (let i = array.length - 1; i > 0; i--) {
             const j = Math.floor(Math.random() * (i + 1));
